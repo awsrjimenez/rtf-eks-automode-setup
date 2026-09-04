@@ -1,0 +1,27 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: auto-ebs-sc
+  annotations:
+    # Makes this the class used by any PVC that does not name one explicitly.
+    # RTF's Helm chart and Mule app PVCs generally do not set storageClassName,
+    # so without a default class they stay Pending forever.
+    storageclass.kubernetes.io/is-default-class: "true"
+# Uses the block storage capability of EKS Auto Mode (NOT the self-managed
+# aws-ebs-csi-driver add-on, which has provisioner "ebs.csi.aws.com").
+provisioner: ebs.csi.eks.amazonaws.com
+# Delay volume creation until a pod is scheduled, so the EBS volume is created
+# in the same AZ as the pod that consumes it.
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+# Auto Mode StorageClasses only work on Auto Mode nodes. This keeps pods with
+# PVCs off any non-Auto-Mode node rather than letting them fail to attach.
+allowedTopologies:
+  - matchLabelExpressions:
+      - key: eks.amazonaws.com/compute-type
+        values:
+          - auto
+parameters:
+  type: gp3
+  encrypted: "true"
