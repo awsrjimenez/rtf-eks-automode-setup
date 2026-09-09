@@ -1,4 +1,4 @@
-# RTF on EKS Auto Mode - POC Runbook
+# RTF on EKS Auto Mode - Runbook
 
 <p align="center">
   <img src="aws-logo.png" width="72" height="72" alt="AWS" />&nbsp;&nbsp;&nbsp;
