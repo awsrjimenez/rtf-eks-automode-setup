@@ -1,0 +1,30 @@
+# Example RTF Helm values file.
+#
+# NOT required - 08-install-rtf.sh auto-generates a values.yaml from
+# MuleSoft's documented schema (filling in activationData and muleLicense
+# from rtf-fabric.env / license.b64). Only provide a real values.yaml if
+# you need optional parameters the generated one doesn't include (FIPS,
+# custom proxy, authorized namespaces, etc). A real file, if present,
+# takes precedence over the auto-generated one.
+#
+# The real values.yaml is git-ignored because it embeds the base64
+# activation data and Mule license.
+
+activationData:            # <base64-activation-data> (from rtf-fabric.env)
+proxy:
+  http_proxy:
+  http_no_proxy:
+  monitoring_proxy:
+muleLicense:               # <base64-mule-license> (from license.b64)
+customLog4jEnabled: false
+global:
+  crds:
+    install: true
+  authorizedNamespaces: false
+  image:
+    rtfRegistry: rtf-runtime-registry.kprod.msap.io
+    pullSecretName: rtf-pull-secret
+  containerLogPaths:
+  - /var/lib/docker/containers
+  - /var/log/containers
+  - /var/log/pods

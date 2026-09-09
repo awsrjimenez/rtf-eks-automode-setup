@@ -1,10 +1,10 @@
 # RTF on EKS Auto Mode - POC Runbook
 
 <p align="center">
-  <img src="aws-logo.png" height="48" alt="AWS" />&nbsp;&nbsp;&nbsp;
-  <img src="mulesoft-logo.png" height="48" alt="MuleSoft" />&nbsp;&nbsp;&nbsp;
-  <img src="amazon-quick-logo.png" height="48" alt="Amazon Quick" />&nbsp;&nbsp;&nbsp;
-  <img src="claude-logo.png" height="48" alt="Claude" />
+  <img src="aws-logo.png" width="72" height="72" alt="AWS" />&nbsp;&nbsp;&nbsp;
+  <img src="mulesoft-logo.png" width="72" height="72" alt="MuleSoft" />&nbsp;&nbsp;&nbsp;
+  <img src="amazon-quick-logo.png" width="72" height="72" alt="Amazon Quick" />&nbsp;&nbsp;&nbsp;
+  <img src="claude-logo.png" width="72" height="72" alt="Claude" />
 </p>
 
 <p align="center"><em>A joint AWS + MuleSoft solution, built with AI assistance from Amazon Quick, Kiro, and Claude Code.</em></p>
