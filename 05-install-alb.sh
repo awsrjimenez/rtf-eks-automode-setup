@@ -1,8 +1,14 @@
 #!/bin/bash
 set -e
 
-CLUSTER_NAME=rtf-automode-poc
-REGION=us-east-1
+CONFIG_FILE="$(dirname "$0")/rtf-automode-v3.yaml"
+CLUSTER_NAME=$(awk '/^metadata:/{f=1;next} f&&/^[^[:space:]]/{f=0} f&&/name:/{print $2;exit}' "$CONFIG_FILE")
+REGION=$(awk '/^metadata:/{f=1;next} f&&/^[^[:space:]]/{f=0} f&&/region:/{print $2;exit}' "$CONFIG_FILE")
+
+if [ -z "$CLUSTER_NAME" ] || [ -z "$REGION" ]; then
+  echo "ERROR: could not read metadata.name / metadata.region from $CONFIG_FILE"
+  exit 1
+fi
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 POLICY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy"
 
@@ -24,6 +30,47 @@ if ! aws iam get-policy --policy-arn $POLICY_ARN >/dev/null 2>&1; then
     --policy-document file://iam_policy.json
 else
   echo "IAM policy already exists, skipping creation."
+fi
+
+echo "=== Patching IAM policy (adding DescribeListenerAttributes for ALB controller v3.5+) ==="
+# The upstream iam_policy.json from kubernetes-sigs is missing
+# elasticloadbalancing:DescribeListenerAttributes, which was added as a
+# required API call in ALB controller v3.5+. Without it, the controller
+# enters a reconciliation loop (403 AccessDenied) and never populates the
+# Ingress hostname. This patch adds it idempotently.
+DEFAULT_VER=$(aws iam get-policy --policy-arn $POLICY_ARN --query 'Policy.DefaultVersionId' --output text)
+aws iam get-policy-version --policy-arn $POLICY_ARN --version-id $DEFAULT_VER \
+  --query 'PolicyVersion.Document' > /tmp/alb-policy-current.json
+
+NEEDS_PATCH=$(python3 -c "
+import json
+policy = json.load(open('/tmp/alb-policy-current.json'))
+found = any('DescribeListenerAttributes' in str(s.get('Action','')) for s in policy.get('Statement',[]))
+print('no' if found else 'yes')
+")
+
+if [ "$NEEDS_PATCH" = "yes" ]; then
+  python3 -c "
+import json
+policy = json.load(open('/tmp/alb-policy-current.json'))
+for stmt in policy.get('Statement', []):
+    actions = stmt.get('Action', [])
+    if isinstance(actions, list) and any('DescribeListener' in a for a in actions):
+        actions.append('elasticloadbalancing:DescribeListenerAttributes')
+        break
+json.dump(policy, open('/tmp/alb-policy-patched.json','w'), indent=2)
+"
+  # Delete oldest non-default version if at the 5-version limit
+  OLDEST=$(aws iam list-policy-versions --policy-arn $POLICY_ARN \
+    --query 'Versions[?!IsDefaultVersion].VersionId | [0]' --output text)
+  if [ "$OLDEST" != "None" ] && [ -n "$OLDEST" ]; then
+    aws iam delete-policy-version --policy-arn $POLICY_ARN --version-id $OLDEST 2>/dev/null || true
+  fi
+  aws iam create-policy-version --policy-arn $POLICY_ARN \
+    --policy-document file:///tmp/alb-policy-patched.json --set-as-default
+  echo "Patched: added DescribeListenerAttributes"
+else
+  echo "Policy already includes DescribeListenerAttributes, no patch needed."
 fi
 
 echo "=== Creating IRSA service account ==="

@@ -1,5 +1,14 @@
 # RTF on EKS Auto Mode - POC Runbook
 
+<p align="center">
+  <img src="logos/aws-logo.png" height="48" alt="AWS" />&nbsp;&nbsp;&nbsp;
+  <img src="logos/mulesoft-logo.png" height="48" alt="MuleSoft" />&nbsp;&nbsp;&nbsp;
+  <img src="logos/amazon-quick-logo.png" height="48" alt="Amazon Quick" />&nbsp;&nbsp;&nbsp;
+  <img src="logos/claude-logo.png" height="48" alt="Claude" />
+</p>
+
+<p align="center"><em>A joint AWS + MuleSoft solution, built with AI assistance from Amazon Quick, Kiro, and Claude Code.</em></p>
+
 Repeatable scripts to stand up MuleSoft Runtime Fabric on an Amazon EKS
 Auto Mode cluster, with a working public ALB endpoint using a real domain.
 

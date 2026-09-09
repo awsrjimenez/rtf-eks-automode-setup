@@ -1,0 +1,34 @@
+apiVersion: rtf.mulesoft.com/v1
+kind: HTTPRouteTemplate
+metadata:
+  name: rtf-poc-route-template
+  namespace: rtf
+spec:
+  baseEndpoints:
+    - http://*.<your-domain>
+  resources:
+    - |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: {{ .ResourceName }}
+        namespace: {{ .Namespace }}
+        annotations:
+          alb.ingress.kubernetes.io/scheme: internet-facing
+          alb.ingress.kubernetes.io/target-type: ip
+          alb.ingress.kubernetes.io/group.name: rtf-poc-group
+          alb.ingress.kubernetes.io/backend-protocol: HTTP
+          alb.ingress.kubernetes.io/healthcheck-path: /healthcheck
+      spec:
+        ingressClassName: alb
+        rules:
+        - host: {{ .Host }}
+          http:
+            paths:
+            - pathType: Prefix
+              path: {{ .Path }}
+              backend:
+                service:
+                  name: {{ .Service.Name }}
+                  port:
+                    name: {{ .Service.PortName }}

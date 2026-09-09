@@ -57,7 +57,11 @@ CLIENT_SECRET="${CLIENT_SECRET:-<connected-app-client-secret>}"
 #   Access Management -> Connected Apps -> Create App -> App acts on its
 #   own behalf (client credentials) -> grant it Runtime Manager /
 #   Runtime Fabric scopes.
-FABRIC_NAME="${FABRIC_NAME:-rtf-automode-poc}"
+# Default fabric name: read from rtf-automode-v3.yaml if not set in rtf-config.env
+if [ -z "$FABRIC_NAME" ]; then
+  _CONFIG_FILE="$(dirname "$0")/rtf-automode-v3.yaml"
+  FABRIC_NAME=$(awk '/^metadata:/{f=1;next} f&&/^[^[:space:]]/{f=0} f&&/name:/{print $2;exit}' "$_CONFIG_FILE" 2>/dev/null || echo "rtf-cluster")
+fi
 REGION="${REGION:-us-east-1}"
 ENVIRONMENT_NAME="${ENVIRONMENT_NAME:-Sandbox}"
 # Looked up by name via the Environments API and resolved to an ID
